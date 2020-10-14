@@ -27,20 +27,19 @@ passport.use(
       callbackURL: '/auth/google/callback',
       proxy: true
     },
-    (accessToken, refreshToken, profile, done) => {
+    async (accessToken, refreshToken, profile, done) => {
       // asynchronous request returns a promise
-      User.findOne({ googleId: profile.id }).then((existingUser) => {
-        if (existingUser) {
-          // done with find the user, continue with the OAuth flow
-          // first argument: error object, second argument: user record
-          done(null, existingUser);
-        } else {
-          // new User create a new model instance, .save() save that to MongoDB
-          new User({ googleId: profile.id }).save().then((user) => {
-            done(null, user);
-          });
-        }
-      });
+      const existingUser = await User.findOne({ googleId: profile.id });
+
+      if (existingUser) {
+        // done with find the user, continue with the OAuth flow
+        // first argument: error object, second argument: user record
+        done(null, existingUser);
+      } else {
+        // new User create a new model instance, .save() save that to MongoDB
+        const user = await new User({ googleId: profile.id }).save();
+        done(null, user);
+      }
     }
   )
 );
